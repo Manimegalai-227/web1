@@ -1,0 +1,349 @@
+restful web services :
+
+node -v
+npm -v
+npm init -y
+npm install express soap
+
+
+
+node server.js
+
+
+const express = require("express");
+const app = express();
+
+app.use(express.json());
+
+let queue = [
+  {
+    id: 1,
+    token: 1,
+    customerName: "Hemalatha",
+    service: "General Enquiry",
+    counter: 1,
+    status: "Completed"
+  },
+  {
+    id: 2,
+    token: 2,
+    customerName: "Karthik",
+    service: "Bill Payment",
+    counter: 2,
+    status: "Serving"
+  },
+  {
+    id: 3,
+    token: 3,
+    customerName: "Nithya",
+    service: "Account Service",
+    counter: 3,
+    status: "Waiting"
+  }
+];
+
+// GET: retrieve all queue details
+app.get("/api/queue", (req, res) => {
+  res.json(queue);
+});
+
+// POST: generate a new queue token
+app.post("/api/queue", (req, res) => {
+  const { customerName, service, counter } = req.body;
+
+  if (!customerName || !service || counter == null) {
+    return res.status(400).json({
+      message: "customerName, service and counter are required"
+    });
+  }
+
+  const item = {
+    id: queue.length + 1,
+    token: queue.length + 1,
+    customerName,
+    service,
+    counter,
+    status: "Waiting"
+  };
+
+  queue.push(item);
+
+  res.status(201).json({
+    message: "Queue token generated successfully",
+    queue: item
+  });
+});
+
+app.listen(4000, () => {
+  console.log("REST server running at http://localhost:4000");
+});
+
+
+http://localhost:4000/api/queue
+
+SOAP:
+
+soap_server.js
+
+const http = require("http");
+const soap = require("soap");
+
+const service = {
+  QueueService: {
+    QueuePort: {
+      GetQueue: function (args) {
+        const queues = {
+          1: {
+            token: 1,
+            customerName: "Hemalatha",
+            service: "General Enquiry",
+            counter: 1,
+            status: "Completed"
+          },
+          2: {
+            token: 2,
+            customerName: "Karthik",
+            service: "Bill Payment",
+            counter: 2,
+            status: "Serving"
+          },
+          3: {
+            token: 3,
+            customerName: "Nithya",
+            service: "Account Service",
+            counter: 3,
+            status: "Waiting"
+          }
+        };
+
+        return queues[Number(args.id)] || {
+          token: 0,
+          customerName: "Not Found",
+          service: "Not Found",
+          counter: 0,
+          status: "Not Found"
+        };
+      }
+    }
+  }
+};
+
+const xml = `
+<definitions
+  name="QueueService"
+  targetNamespace="http://localhost:4001/queueService"
+  xmlns="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:tns="http://localhost:4001/queueService"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <types>
+    <xsd:schema
+      targetNamespace="http://localhost:4001/queueService"
+      elementFormDefault="qualified">
+
+      <xsd:element name="GetQueueRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="id" type="xsd:int"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <xsd:element name="GetQueueResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="token" type="xsd:int"/>
+            <xsd:element name="customerName" type="xsd:string"/>
+            <xsd:element name="service" type="xsd:string"/>
+            <xsd:element name="counter" type="xsd:int"/>
+            <xsd:element name="status" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </types>
+
+  <message name="GetQueueInput">
+    <part name="parameters" element="tns:GetQueueRequest"/>
+  </message>
+
+  <message name="GetQueueOutput">
+    <part name="parameters" element="tns:GetQueueResponse"/>
+  </message>
+
+  <portType name="QueuePortType">
+    <operation name="GetQueue">
+      <input message="tns:GetQueueInput"/>
+      <output message="tns:GetQueueOutput"/>
+    </operation>
+  </portType>
+
+  <binding name="QueueBinding" type="tns:QueuePortType">
+    <soap:binding style="document"
+      transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="GetQueue">
+      <soap:operation
+        soapAction="http://localhost:4001/queueService/GetQueue"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+  </binding>
+
+  <service name="QueueService">
+    <port name="QueuePort" binding="tns:QueueBinding">
+      <soap:address
+        location="http://localhost:4001/queueService"/>
+    </port>
+  </service>
+</definitions>
+`;
+
+const server = http.createServer((req, res) => {
+  res.end("SOAP Server Running");
+});
+
+server.listen(4001, () => {
+  soap.listen(server, "/queueService", service, xml);
+
+  console.log(
+    "SOAP service running at http://localhost:4001/queueService?wsdl"
+  );
+});
+
+terminal : node soap_server.js
+
+soap_client.js
+
+const soap = require("soap");
+
+const url = "http://localhost:4001/queueService?wsdl";
+
+soap.createClient(url, (err, client) => {
+  if (err) {
+    console.log("Client error:", err.message);
+    return;
+  }
+
+  client.GetQueue({ id: 2 }, (err, result) => {
+    if (err) {
+      console.log("SOAP request error:", err.message);
+    } else {
+      console.log("Queue Details:");
+      console.log(result);
+    }
+  });
+});
+
+
+
+
+Mongo DB 
+
+server.js
+
+require("dotenv").config();
+
+const dns = require("node:dns");
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// Connect MongoDB Atlas
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("MongoDB Connected"))
+    .catch(err => console.log("Connection Error:", err.message));
+
+// Booking schema
+const Booking = mongoose.model("Booking", {
+    passenger: String,
+    from: String,
+    to: String,
+    date: String,
+    seats: Number
+});
+
+// HOME PAGE
+app.get("/", (req, res) => {
+    res.send("Bus Reservation Server is Running!");
+});
+
+// CREATE: Book a ticket
+app.post("/bookings", async (req, res) => {
+    try {
+        const data = await Booking.create(req.body);
+        res.json(data);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// READ: View all bookings
+app.get("/bookings", async (req, res) => {
+    try {
+        res.json(await Booking.find());
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// UPDATE: Edit a booking
+app.put("/bookings/:id", async (req, res) => {
+    try {
+        const data = await Booking.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+
+        res.json(data);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// DELETE: Cancel a booking
+app.delete("/bookings/:id", async (req, res) => {
+    try {
+        await Booking.findByIdAndDelete(req.params.id);
+        res.json({ message: "Ticket cancelled successfully" });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Start server
+app.listen(3000, () => {
+    console.log("Server running at http://localhost:3000");
+});
+
+
+terminal :
+
+npm init -y
+npm.cmd install express mongoose dotenv cors
+
+go to mongodb atlas 
+
+create project 
+network and database access la create users 
+update ip from website of where is my ip 
+ans create clusters change into javascript and copy the link 
+
+create .env file 
+MONGO_URI= "mongodb+srv://mani:12345@cluster0.ox7o6ic.mongodb.net/"
+
+node server.js
+copy the url into postman and do the crud operation 
+
+
+
+
+
