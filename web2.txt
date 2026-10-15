@@ -1,0 +1,533 @@
+XML :
+
+
+
+Question 2(a): Create an XML file for a school containing at least three courses. Each course should contain the following elements:
+
+Write an internal DTD to define the structure of the XML document. Ensure that every course has the required elements and make the student registration number (reg_no) optional.
+Question 2(b): Validate the XML document and demonstrate what happens when a required element is missing. Show the validation output for both valid and invalid XML documents.
+
+code:school.xml
+
+python -m pip install lxml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE school [
+    <!ELEMENT school (course+)>
+    <!ELEMENT course (course_code, course_name, reg_no?)>
+    <!ELEMENT course_code (#PCDATA)>
+    <!ELEMENT course_name (#PCDATA)>
+    <!ELEMENT reg_no (#PCDATA)>
+]>
+<school>
+    <course>
+        <course_code>C101</course_code>
+        <course_name>Java Programming</course_name>
+        <reg_no>101</reg_no>
+    </course>
+    <course>
+        <course_code>C102</course_code>
+        <course_name>Python Programming</course_name>
+    </course>
+    <course>
+        <course_code>C103</course_code>
+        <course_name>Web Technology</course_name>
+        <reg_no>103</reg_no>
+    </course>
+</school>
+
+
+validate.py
+
+
+from lxml import etree
+
+tree = etree.parse("school.xml")
+dtd = tree.docinfo.internalDTD
+
+if dtd.validate(tree):
+    print("XML is valid")
+else:
+    print("XML is invalid")
+    print(dtd.error_log)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2. External dtd :
+Employee_xml
+
+file structure :
+
+employee.xml
+employee.dtd
+employee.xsl
+validate.py
+
+
+employee.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="employee.xsl"?>
+<!DOCTYPE employees SYSTEM "employee.dtd">
+
+<employees>
+    <employee emp_id="E101">
+        <name>Arun</name>
+        <department>IT</department>
+        <salary>30000</salary>
+    </employee>
+
+    <employee emp_id="E102">
+        <name>Priya</name>
+        <department>HR</department>
+        <salary>35000</salary>
+    </employee>
+
+    <employee emp_id="E103">
+        <name>Kumar</name>
+        <department>Finance</department>
+        <salary>40000</salary>
+    </employee>
+</employees>
+
+
+employee.dtd
+
+
+<!ELEMENT employees (employee+)>
+<!ELEMENT employee (name, department, salary)>
+<!ATTLIST employee emp_id ID #REQUIRED>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT department (#PCDATA)>
+<!ELEMENT salary (#PCDATA)>
+
+
+employee.xsl
+
+
+
+
+validate.py
+
+from lxml import etree
+
+dtd = etree.DTD("employee.dtd")
+tree = etree.parse("employee.xml")
+
+if dtd.validate(tree):
+    print("XML is valid")
+else:
+    print("XML is invalid")
+    print(dtd.error_log)
+
+
+
+
+Angular Simple web page 
+
+index.html 
+
+<html ng-app="studentApp">
+<head>
+    <title>Student Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+<body ng-controller="studentCtrl">
+    <header>
+        <h1>Student Management System</h1>
+        <p>Manage student records easily</p>
+    </header>
+    <nav>
+        <button ng-click="goTo('home')">Home</button>
+        <button ng-click="goTo('add')">Add Student</button>
+        <button ng-click="goTo('view')">View Students</button>
+    </nav>
+    <div class="container">
+        <section ng-if="page === 'home'">
+            <h2>Dashboard</h2>
+            <div class="card">
+                <h3>Total Students</h3>
+                <h1>{{students.length}}</h1>
+            </div>
+            <p>Welcome to the Student Management System.</p>
+        </section>
+        <section ng-if="page === 'add'">
+            <h2>{{editingId ? 'Update Student' : 'Add Student'}}</h2>
+            <form ng-submit="saveStudent()">
+                <label>Student Name</label>
+                <input type="text" ng-model="form.name"
+                       placeholder="Enter student name" required>
+                <label>Register Number</label>
+                <input type="text" ng-model="form.regno"
+                       placeholder="Enter register number" required>
+                <label>Department</label>
+                <input type="text" ng-model="form.department"
+                       placeholder="Enter department" required>
+                <button type="submit">
+                    {{editingId ? 'Update Student' : 'Add Student'}}
+                </button>
+                <button type="button" class="secondary"
+                        ng-click="resetForm()">Clear</button>
+            </form>
+        </section>
+        <section ng-if="page === 'view'">
+            <h2>Student Records</h2>
+            <div class="search">
+                <input type="text" ng-model="searchName"
+                       placeholder="Search by student name">
+                <button ng-click="searchStudent()">Search</button>
+                <button class="secondary" ng-click="clearSearch()">Clear Search</button>
+            </div>
+            <p ng-if="filteredStudents.length === 0">
+                No students found.
+            </p>
+            <div class="table-container">
+                <table ng-if="filteredStudents.length > 0">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Name</th>
+                            <th>Register Number</th>
+                            <th>Department</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="s in filteredStudents track by s._id">
+                            <td>{{$index + 1}}</td>
+                            <td>{{s.name}}</td>
+                            <td>{{s.regno}}</td>
+                            <td>{{s.department}}</td>
+                            <td>
+                                <button ng-click="editStudent(s)">Edit</button>
+                                <button class="danger"
+                                        ng-click="deleteStudent(s)">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <p class="message"
+           ng-class="{'error': isError}"
+           ng-if="message">
+            {{message}}
+        </p>
+    </div>
+    <footer>
+        <p>Student Management System | Web Technology Lab</p>
+    </footer>
+    <script src="app.js"></script>
+</body>
+</html>
+
+style.css
+
+```css
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    margin: 20px;
+}
+
+header {
+    background-color: lightblue;
+    text-align: center;
+    padding: 15px;
+}
+
+nav {
+    text-align: center;
+    margin: 15px;
+}
+
+button {
+    padding: 8px 12px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.container {
+    background-color: white;
+    padding: 20px;
+}
+
+input {
+    padding: 8px;
+    margin: 8px 0;
+}
+
+.card {
+    background-color: lightblue;
+    padding: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: lightblue;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+}
+```
+
+app.js
+
+
+var app = angular.module("studentApp", []);
+app.controller("studentCtrl", function($scope, $http) {
+    var API = "http://localhost:3000/students";
+    $scope.students = [];
+    $scope.filteredStudents = [];
+    $scope.form = {};
+    $scope.page = "home";
+    $scope.editingId = null;
+    $scope.searchName = "";
+    $scope.loadStudents = function() {
+        $http.get(API).then(function(res) {
+            $scope.students = res.data;
+            $scope.searchStudent();
+        });
+    };
+    $scope.goTo = function(page) {
+        $scope.page = page;
+        if (page === "view") $scope.loadStudents();
+        if (page === "add") {
+            $scope.form = {};
+            $scope.editingId = null;
+        }
+    };
+    $scope.saveStudent = function() {
+        if (!$scope.form.name || !$scope.form.regno ||
+            !$scope.form.department) {
+            alert("Fill all fields");
+            return;
+        }
+        var request = $scope.editingId
+            ? $http.put(API + "/" + $scope.editingId, $scope.form)
+            : $http.post(API, $scope.form);
+        request.then(function() {
+            alert("Student saved successfully");
+            $scope.form = {};
+            $scope.editingId = null;
+            $scope.page = "view";
+            $scope.loadStudents();
+        }).catch(function(error) {
+            alert(error.data.error || "Operation failed");
+        });
+    };
+    $scope.editStudent = function(student) {
+        $scope.form = {
+            name: student.name,
+            regno: student.regno,
+            department: student.department
+        };
+        $scope.editingId = student._id;
+        $scope.page = "add";
+    };
+    $scope.deleteStudent = function(student) {
+        if (confirm("Delete " + student.name + "?")) {
+            $http.delete(API + "/" + student._id).then(function() {
+                alert("Student deleted");
+                $scope.loadStudents();
+            });
+        }
+    };
+    $scope.searchStudent = function() {
+        var name = ($scope.searchName || "").toLowerCase();
+
+        $scope.filteredStudents = $scope.students.filter(function(s) {
+            return s.name.toLowerCase().includes(name);
+        });
+    };
+    $scope.resetForm = function() {
+        $scope.form = {};
+        $scope.editingId = null;
+    };
+    $scope.clearSearch = function() {
+        $scope.searchName = "";
+        $scope.searchStudent();
+    };
+    $scope.loadStudents();
+});
+
+backend
+
+server.js
+
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const path = require("path");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// Serve frontend files from the parent folder
+app.use(express.static(path.join(__dirname, "..")));
+
+// Home page
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "../index.html"));
+});
+
+// MongoDB connection
+mongoose.connect("mongodb://127.0.0.1:27017/studentDB")
+    .then(() => console.log("MongoDB connected"))
+    .catch(err => console.log("MongoDB error:", err));
+
+// Student model
+const Student = mongoose.model("Student", {
+    name: String,
+    regno: { type: String, unique: true },
+    department: String
+});
+
+// Get all students
+app.get("/students", async (req, res) => {
+    try {
+        const students = await Student.find();
+        res.json(students);
+    } catch (err) {
+        res.status(500).json({ error: "Cannot fetch students" });
+    }
+});
+
+// Add student
+app.post("/students", async (req, res) => {
+    try {
+        const student = await Student.create(req.body);
+        res.json(student);
+    } catch (err) {
+        res.status(400).json({
+            error: "Cannot add student. Check fields or duplicate register number."
+        });
+    }
+});
+
+// Update student
+app.put("/students/:id", async (req, res) => {
+    try {
+        const student = await Student.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+
+        if (!student) {
+            return res.status(404).json({ error: "Student not found" });
+        }
+
+        res.json(student);
+    } catch (err) {
+        res.status(400).json({ error: "Cannot update student" });
+    }
+});
+
+// Delete student
+app.delete("/students/:id", async (req, res) => {
+    try {
+        const student = await Student.findByIdAndDelete(req.params.id);
+
+        if (!student) {
+            return res.status(404).json({ error: "Student not found" });
+        }
+
+        res.json({ message: "Student deleted" });
+    } catch (err) {
+        res.status(400).json({ error: "Cannot delete student" });
+    }
+});
+
+// Start server
+app.listen(3000, () => {
+    console.log("Server running at http://localhost:3000");
+});
+
+
+npm init -y
+npm install express mongoose cors
+node server.js
+
+
+
+TESTING:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TechFest Registration</title>
+</head>
+<body>
+    <h2>TechFest Registration</h2>
+
+    <form id="regForm">
+        <input id="name" placeholder="Full Name" required>
+        <input id="email" type="email"
+               placeholder="Email" required>
+        <select id="event">
+            <option>Robotics</option>
+            <option>Web Development</option>
+        </select>
+        <button type="submit">Register</button>
+    </form>
+
+    <p id="successMessage"
+       style="color:green"></p>
+
+    <h3>Participants</h3>
+    <ul id="participants"></ul>
+
+    <script>
+        document.getElementById("regForm")
+        .addEventListener("submit", function(e) {
+            e.preventDefault();
+
+            const name =
+                document.getElementById("name").value;
+            const event =
+                document.getElementById("event").value;
+
+            // BUG: incorrect element ID
+           const msg = document.getElementById("successMessage");
+
+            msg.style.display = "block";
+            msg.textContent =
+                "Registered " + name + " for " + event + "!";
+
+            const li = document.createElement("li");
+            li.textContent = name + " - " + event;
+            document.getElementById("participants")
+                .appendChild(li);
+        });
+    </script>
+</body>
+</html>
+
